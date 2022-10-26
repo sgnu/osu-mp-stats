@@ -17,6 +17,7 @@ export default {
   },
   created() {
     // this.getUniquePlayers()
+    this.calculateMatchCosts()
   },
   methods: {
     getUniquePlayers() {
@@ -35,6 +36,47 @@ export default {
         setTimeout(this.addPlayer, 50 * index, id)
       })
     },
+
+    calculateMatchCosts() { // calculate using osuPlus's formula: https://i.imgur.com/BJPOKDY.png
+      const tempPlayers = {}
+      Object.values(this.players).forEach(player => {
+        tempPlayers[player.user_id] = {
+          user_id: player.user_id,
+          gameSum: 0,
+          gamesPlayed: 0
+        }
+      })
+
+      // parse through all played games
+      this.game.games.forEach(game => {
+        // get average score; account for in-match referees getting 0 score
+        const players = {}
+        let totalScore = 0
+        let count = 0
+        game.scores.forEach(score => {
+          const points = parseInt(score.score)
+          if (points !== 0) {
+            totalScore += points
+            count++
+            players[score.user_id] = {
+              user_id: score.user_id,
+              score: points,
+            }
+          }
+        })
+
+        const average = totalScore / count
+        Object.values(players).forEach(player => {
+          tempPlayers[player.user_id].gameSum += player.score / average
+          tempPlayers[player.user_id].gamesPlayed++
+        })
+      })
+
+      Object.values(tempPlayers).forEach(player => {
+        this.players[player.user_id].matchCost = (player.gameSum * (2 / (player.gamesPlayed + 2)))
+      })
+    },
+
     async addPlayer(id) {
       const params = { 'type': 'id', 'u': id }
       this.players[id] = (await apiCall('get_user', params))[0]
@@ -56,7 +98,7 @@ export default {
 <template>
   <h1>{{game.match.name}}</h1>
   <h1 v-if="isLoading">Loading...</h1>
-  <p>All players: <span v-for="player in players">{{player.username}} </span></p>
+  <p v-for="player in players">{{player.username}} <span v-if="player.matchCost">- {{player.matchCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}}</span></p>
   <GameResults :game-info="game.games[0]" />
 </template>
 
