@@ -99,7 +99,7 @@ export default {
   <h1>{{ game.match.name }}</h1>
   <h1 v-if="isLoading">Loading...</h1>
   <p v-for="player in players">{{ player.username }} <span v-if="player.matchCost">-
-      {{ player.matchCost.toLocaleString(undefined, { minimumFractionDigits: 2 }) }}</span></p>
+      {{ player.matchCost.toLocaleString(undefined, { minimumFractionDigits: 3 }) }}</span></p>
   <GameResults :game-info="game.games[0]" />
 </template>
 
