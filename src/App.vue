@@ -153,5 +153,9 @@ p {
     display: flex;
     flex-direction: column;
   }
+
+  .team {
+    margin-bottom: 24px;
+  }
 }
 </style>
