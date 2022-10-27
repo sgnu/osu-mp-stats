@@ -1,17 +1,21 @@
 <script>
 import GameResults from './components/GameResults.vue'
+import Player from './components/Player.vue'
 import { exampleGame, examplePlayers } from './exampleData'
 import { apiCall } from './util/apiCall'
 
 export default {
   name: 'App',
   components: {
-    GameResults
+    GameResults,
+    Player
   },
   data() {
     return {
       game: exampleGame,
       players: examplePlayers,
+      teamOne: {},
+      teamTwo: {},
       fetchQueue: [],
     }
   },
@@ -62,6 +66,7 @@ export default {
               user_id: score.user_id,
               score: points,
             }
+            this.players[score.user_id].team = score.team
           }
         })
 
@@ -74,6 +79,19 @@ export default {
 
       Object.values(tempPlayers).forEach(player => {
         this.players[player.user_id].matchCost = (player.gameSum * (2 / (player.gamesPlayed + 2)))
+        this.players[player.user_id].gamesPlayed = player.gamesPlayed
+      })
+
+      this.sortTeams()
+    },
+
+    sortTeams() {
+      Object.values(this.players).forEach(player => {
+        if (player.team === '1') {
+          this.teamOne[player.user_id] = player
+        } else {
+          this.teamTwo[player.user_id] = player
+        }
       })
     },
 
@@ -96,19 +114,44 @@ export default {
 </script>
 
 <template>
-  <h1>{{ game.match.name }}</h1>
-  <h1 v-if="isLoading">Loading...</h1>
-  <p v-for="player in players">{{ player.username }} <span v-if="player.matchCost">-
-      {{ player.matchCost.toLocaleString(undefined, { minimumFractionDigits: 3 }) }}</span></p>
-  <GameResults :game-info="game.games[0]" />
+  <div class="app">
+    <h1>{{ game.match.name }}</h1>
+    <h1 v-if="isLoading">Loading...</h1>
+    <div class="team">
+      <Player v-for="player in teamOne" :player="player" />
+    </div>
+    <div class="team">
+      <Player v-for="player in teamTwo" :player="player" />
+    </div>
+  </div>
+  <!-- <GameResults :game-info="game.games[0]" /> -->
 </template>
 
 <style scoped>
+.app {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.team {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 h1 {
   color: var(--ctp-mocha-text);
+  grid-column: 1 / span 2;
 }
 
 p {
   color: var(--ctp-mocha-subtext1)
+}
+
+@media screen and (max-width: 1080px) {
+  .app {
+    display: flex;
+    flex-direction: column;
+  }
 }
 </style>
