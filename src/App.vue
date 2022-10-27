@@ -96,11 +96,19 @@ export default {
 </script>
 
 <template>
-  <h1>{{game.match.name}}</h1>
+  <h1>{{ game.match.name }}</h1>
   <h1 v-if="isLoading">Loading...</h1>
-  <p v-for="player in players">{{player.username}} <span v-if="player.matchCost">- {{player.matchCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}}</span></p>
+  <p v-for="player in players">{{ player.username }} <span v-if="player.matchCost">-
+      {{ player.matchCost.toLocaleString(undefined, { minimumFractionDigits: 2 }) }}</span></p>
   <GameResults :game-info="game.games[0]" />
 </template>
 
 <style scoped>
+h1 {
+  color: var(--ctp-mocha-text);
+}
+
+p {
+  color: var(--ctp-mocha-subtext1)
+}
 </style>
