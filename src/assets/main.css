@@ -1,8 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP&display=swap');
 @import url('./catppuccin.css');
 
 html,
 body {
   background-color: var(--ctp-mocha-crust);
+  font-family: "Noto Sans JP";
 }
 
 #app {
