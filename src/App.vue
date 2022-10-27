@@ -14,8 +14,8 @@ export default {
     return {
       game: exampleGame,
       players: examplePlayers,
-      teamOne: {},
-      teamTwo: {},
+      teamOne: [],
+      teamTwo: [],
       fetchQueue: [],
     }
   },
@@ -88,10 +88,19 @@ export default {
     sortTeams() {
       Object.values(this.players).forEach(player => {
         if (player.team === '1') {
-          this.teamOne[player.user_id] = player
+          this.teamOne.push(player)
         } else {
-          this.teamTwo[player.user_id] = player
+          this.teamTwo.push(player)
         }
+      })
+
+      // sort players on team by match cost (descending)
+      this.teamOne.sort((a, b) => {
+        return b.matchCost - a.matchCost
+      })
+
+      this.teamTwo.sort((a, b) => {
+        return b.matchCost - a.matchCost
       })
     },
 
@@ -124,7 +133,7 @@ export default {
       <Player v-for="player in teamTwo" :player="player" />
     </div>
   </div>
-  <!-- <GameResults :game-info="game.games[0]" /> -->
+  <GameResults :game-info="game.games[0]" :players="players" />
 </template>
 
 <style scoped>
