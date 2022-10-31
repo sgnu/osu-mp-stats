@@ -64,6 +64,8 @@ export default {
         bpm() {
             if (this.beatmapInfo.mods & 64) {   // double time
                 return this.beatmapInfo.bpm * 1.5
+            } else {
+                return this.beatmapInfo.bpm
             }
         },
 
