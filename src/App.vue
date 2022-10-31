@@ -1,7 +1,7 @@
 <script>
 import GameResults from './components/GameResults.vue'
 import Player from './components/Player.vue'
-import { exampleGame, examplePlayers } from './exampleData'
+import { exampleGame, examplePlayers, exampleBeatmaps } from './exampleData'
 import { apiCall } from './util/apiCall'
 
 export default {
@@ -14,6 +14,7 @@ export default {
     return {
       game: exampleGame,
       players: examplePlayers,
+      beatmaps: exampleBeatmaps,
       teamOne: [],
       teamTwo: [],
       fetchQueue: [],
@@ -21,6 +22,7 @@ export default {
   },
   created() {
     // this.getUniquePlayers()
+    // this.getBeatmapsInfo()
     this.calculateMatchCosts()
   },
   methods: {
@@ -38,6 +40,24 @@ export default {
       tempArray.forEach((id, index) => {
         this.fetchQueue.push(`get_user-${id}`)
         setTimeout(this.addPlayer, 50 * index, id)
+      })
+    },
+
+    getBeatmapsInfo() {
+      const tempArray = []
+
+      this.game.games.forEach(game => {
+        if (tempArray.indexOf(game.beatmap_id) === -1) {
+          tempArray.push({
+            beatmapId: game.beatmap_id,
+            mods: game.mods
+          })
+        }
+      })
+
+      tempArray.forEach((map, index) => {
+        this.fetchQueue.push(`get_beatmap-${map.beatmapId}`)
+        setTimeout(this.getBeatmap, 50 * index, map.beatmapId, map.mods)
       })
     },
 
@@ -104,6 +124,20 @@ export default {
       })
     },
 
+    async getBeatmap(beatmapId, mods) {
+      const params = { 'b': beatmapId }
+      const res = await apiCall('get_beatmaps', params)
+      res[0]["mods"] = mods
+
+      this.beatmaps[beatmapId] = res[0]
+
+
+      const index = this.fetchQueue.indexOf(`get_beatmap-${beatmapId}`)
+      if (index > -1) {
+        this.fetchQueue.splice(index, 1)
+      }
+    },
+
     async addPlayer(id) {
       const params = { 'type': 'id', 'u': id }
       this.players[id] = (await apiCall('get_user', params))[0]
@@ -123,17 +157,20 @@ export default {
 </script>
 
 <template>
-  <div class="app">
+  <h1 v-if="isLoading">Loading...</h1>
+  <div class="app" v-else>
     <h1>{{ game.match.name }}</h1>
-    <h1 v-if="isLoading">Loading...</h1>
     <div class="team">
       <Player v-for="player in teamOne" :player="player" />
     </div>
     <div class="team">
       <Player v-for="player in teamTwo" :player="player" />
     </div>
+
+    <div class="games">
+      <GameResults v-for="gameResult in game.games" :game-info="gameResult" :players="players" :beatmaps="beatmaps" />
+    </div>
   </div>
-  <GameResults :game-info="game.games[0]" :players="players" />
 </template>
 
 <style scoped>
@@ -145,7 +182,15 @@ export default {
 .team {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
+}
+
+.team-two {
+  text-decoration: underline;
+}
+
+.games {
+  grid-column: 1 / span 2;
 }
 
 h1 {

@@ -3,12 +3,14 @@ export default {
     name: 'GameResults',
     props: {
         gameInfo: Object,
-        players: Object
+        players: Object,
+        beatmaps: Object
     },
     data() {
         return {
             teamOne: [],
-            teamTwo: []
+            teamTwo: [],
+            beatmapInfo: {},
         }
     },
     created() {
@@ -28,6 +30,8 @@ export default {
         this.teamTwo.sort((a, b) => {
             return b.score - a.score
         })
+
+        this.beatmapInfo = this.beatmaps[this.gameInfo.beatmap_id]
     },
     methods: {
         formatScore(score) {
@@ -52,11 +56,19 @@ export default {
 </script>
 
 <template>
-    <div>
-        <div class="beatmap">{{ gameInfo.beatmap_id }}</div>
-        <div class="team-container">
+    <div class="game-container">
+        <div class="beatmap-header" :style="{'background-image': `url(https://assets.ppy.sh/beatmaps/${beatmapInfo.beatmapset_id}/covers/cover.jpg)`}"></div>
+        <a class="beatmap" :href="`https://osu.ppy.sh/b/${beatmapInfo.beatmap_id}`">{{ beatmapInfo.artist }} - {{ beatmapInfo.title }} [{{ beatmapInfo.version }}]</a>
+        <div class="teams-container">
             <div class="team team-one">
                 <div v-for="score in teamOne">
+                    <h1>{{ players[score.user_id].username }} <span>{{ formatScore(score.score) }}</span></h1>
+                    <p>{{ score.maxcombo }}x max combo - {{ calculateAccuracy(score) }}%</p>
+                    <p>{ {{ score.count300 }} / {{ score.count100 }} / {{ score.count50 }} / {{ score.countmiss }} }</p>
+                </div>
+            </div>
+            <div class="team team-two">
+                <div v-for="score in teamTwo">
                     <h1>{{ players[score.user_id].username }} <span>{{ formatScore(score.score) }}</span></h1>
                     <p>{{ score.maxcombo }}x max combo - {{ calculateAccuracy(score) }}%</p>
                     <p>{ {{ score.count300 }} / {{ score.count100 }} / {{ score.count50 }} / {{ score.countmiss }} }</p>
@@ -67,15 +79,40 @@ export default {
 </template>
 
 <style scoped>
-.beatmap {
-    color: var(--ctp-mocha-text);
+.game-container {
+    background: var(--ctp-mocha-base);
+    border-radius: 12px;
+
     width: 100%;
-    text-align: center;
+    height: auto;
 }
 
-.team-container {
+.beatmap-header {
+    background-size: cover;
+    background-position: center;
+    border-radius: 12px;
+
+    margin-top: 24px;
+    width: 100%;
+    height: 192px;
+    filter: brightness(0.33);
+}
+
+a.beatmap {
+    text-decoration: none;
+    color: var(--ctp-mocha-text);
+    font-size: 16px;
+
+    position: relative;
+    top: -32px;
+    left: 12px;
+}
+
+.teams-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
+
+    padding: 16px;
 }
 
 .team-one h1 {
@@ -86,6 +123,10 @@ export default {
     color: var(--ctp-mocha-red);
 }
 
+.team-two {
+    text-align: right;
+}
+
 h1 {
     margin: 0;
 }
@@ -93,7 +134,7 @@ h1 {
 h1>span {
     color: var(--ctp-mocha-text);
     font-weight: 400;
-    font-size: 18px;
+    font-size: 28px;
 }
 
 p {
@@ -102,13 +143,17 @@ p {
 }
 
 @media screen and (max-width: 1080px) {
-    .team-container {
+    .teams-container {
         display: flex;
         flex-direction: column;
     }
 
     .team {
         margin-bottom: 24px;
+    }
+
+    .team-two {
+        text-align: left;
     }
 }
 </style>
