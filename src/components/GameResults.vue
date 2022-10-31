@@ -59,6 +59,14 @@ export default {
         get2Decimals(number) {
             return new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2}).format(number)
         },
+
+        totalScore(team) {
+            let total = 0
+            team.forEach(score => {
+                total += parseInt(score.score)
+            })
+            return this.formatScore(total)
+        }
     },
     computed: {
         bpm() {
@@ -143,13 +151,15 @@ export default {
         <p class="beatmap-stats">{{ starRating }}★ {{ bpm }}bpm / CS{{ size }} / OD{{ overall }} / AR{{ approach }}</p>
         <div class="teams-container">
             <div class="team team-one">
+                <h2 class="total">{{ totalScore(teamOne) }}</h2>
                 <div v-for="score in teamOne">
-                    <h1><a :href="`https://osu.ppy.sh/u/${score.user_id}`">{{ players[score.user_id].username }}</a> <span>{{ formatScore(score.score) }}</span></h1>
+                    <h1><span>{{ formatScore(score.score) }}</span> <a :href="`https://osu.ppy.sh/u/${score.user_id}`">{{ players[score.user_id].username }}</a></h1>
                     <p>{{ score.maxcombo }}x max combo - {{ calculateAccuracy(score) }}%</p>
                     <p>{ {{ score.count300 }} / {{ score.count100 }} / {{ score.count50 }} / {{ score.countmiss }} }</p>
                 </div>
             </div>
             <div class="team team-two">
+                <h2 class="total">{{ totalScore(teamTwo) }}</h2>
                 <div v-for="score in teamTwo">
                     <h1><a :href="`https://osu.ppy.sh/u/${score.user_id}`">{{ players[score.user_id].username }}</a> <span>{{ formatScore(score.score) }}</span></h1>
                     <p>{{ score.maxcombo }}x max combo - {{ calculateAccuracy(score) }}%</p>
@@ -230,8 +240,23 @@ h1>span {
 }
 
 p {
-    color: var(--ctp-mocha-subtext0);
+    color: var(--ctp-mocha-overlay2);
     margin: 0;
+}
+
+h2 {
+    font-size: 32px;
+    margin: 0;
+    padding-bottom: 16px;
+}
+
+.team-one h2 {
+    color: var(--ctp-mocha-blue);
+}
+
+.team-two h2 {
+    color: var(--ctp-mocha-red);
+    text-align: right;
 }
 
 @media screen and (max-width: 1080px) {
