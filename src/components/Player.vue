@@ -19,7 +19,7 @@ export default {
 <template>
     <div>
         <img class="profile-picture" :src="`https://s.ppy.sh/a/${player.user_id}`"/>
-        <h1>{{ player.username }} #{{ getRank }}</h1>
+        <h1><a :href="`https://osu.ppy.sh/u/${player.user_id}`">{{ player.username }}</a> #{{ getRank }}</h1>
         <div class="break"></div>
         <p v-if="player.matchCost">{{ getMatchCost }} match cost</p>
         <!-- {{ player.team }} -->
@@ -44,10 +44,12 @@ img.profile-picture {
     height: 0;
 }
 
-h1 {
+h1,
+h1 a {
     color: var(--ctp-mocha-text);
     font-size: 24px;
     line-height: 32px;
+    text-decoration: none;
 
     margin: 0;
 }
