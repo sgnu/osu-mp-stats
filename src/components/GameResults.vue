@@ -49,7 +49,86 @@ export default {
             const totalHits = hits[0] + hits[1] + hits[2] + hits[3]
             const accuracy = 100 * ((hits[0] * 300) + (hits[1] * 100) + (hits[2] * 50)) / (totalHits * 300)
 
-            return new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(accuracy)
+            return this.get2Decimals(accuracy)
+        },
+
+        get1Decimals(number) {
+            return new Intl.NumberFormat(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1}).format(number)
+        },
+
+        get2Decimals(number) {
+            return new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2}).format(number)
+        },
+    },
+    computed: {
+        bpm() {
+            if (this.beatmapInfo.mods & 64) {   // double time
+                return this.beatmapInfo.bpm * 1.5
+            }
+        },
+
+        starRating() {
+            return this.get2Decimals(this.beatmapInfo.difficultyrating)
+        },
+
+        overall() {
+            if (this.beatmapInfo.mods & 16) {   // hard rock
+                return this.get1Decimals(Math.min(this.beatmapInfo.diff_overall * 1.4, 10))
+            } else if (this.beatmapInfo.mods & 64) {    // double time
+                let perfectWindow = 80 - (6 *  this.beatmapInfo.diff_overall)
+                perfectWindow = perfectWindow / 1.5
+                return this.get1Decimals((80 - perfectWindow) / 6)
+            } else {
+                return this.get1Decimals(this.beatmapInfo.diff_overall)
+            }
+        },
+
+        approach() {
+            const approachRate = this.beatmapInfo.diff_approach
+            if (this.beatmapInfo.mods & 16) {   // hard rock
+                return this.get1Decimals(Math.min(approachRate * 1.4, 10))
+            } else if (this.beatmapInfo.mods & 64) {
+                let approachTime, newAr
+                if (approachRate < 5) {
+                    approachTime = 1200 + 600 * (5 - approachRate) / 5
+                } else if (approachRate > 5) {
+                    approachTime = 1200 - 750 * (approachRate - 5) / 5
+                } else {
+                    approachTime = 1200
+                }
+
+                approachTime = approachTime / 1.5
+                if (approachTime > 1200) {
+                    newAr = 15 - (5 * approachTime / 600)
+                } else if (approachTime < 1200) {
+                    newAr = ((6000 - 5 * approachTime) / 750) + 5
+                } else {
+                    newAr = 5
+                }
+
+                return this.get1Decimals(newAr)
+            } else {
+                return this.get1Decimals(approachRate)
+            }
+        },
+
+        size() {
+            if (this.beatmapInfo.mods & 16) {   // hard rock
+                return this.get1Decimals(Math.min(this.beatmapInfo.diff_size * 1.3, 10))
+            } else {
+                return this.beatmapInfo.diff_size
+            }
+        },
+
+        enabledMods() {
+            const mod = this.beatmapInfo.mods
+            if (mod & 8) {   // hidden
+                return '+HD'
+            } else if (mod & 16) {  // hard rock
+                return '+HR'
+            } else if (mod & 64) {  // double time
+                return '+DT'
+            }
         }
     }
 }
@@ -58,18 +137,19 @@ export default {
 <template>
     <div class="game-container">
         <div class="beatmap-header" :style="{'background-image': `url(https://assets.ppy.sh/beatmaps/${beatmapInfo.beatmapset_id}/covers/cover.jpg)`}"></div>
-        <a class="beatmap" :href="`https://osu.ppy.sh/b/${beatmapInfo.beatmap_id}`">{{ beatmapInfo.artist }} - {{ beatmapInfo.title }} [{{ beatmapInfo.version }}]</a>
+        <a class="beatmap" :href="`https://osu.ppy.sh/b/${beatmapInfo.beatmap_id}`">{{ beatmapInfo.artist }} - {{ beatmapInfo.title }} [{{ beatmapInfo.version }}] {{ enabledMods }}</a>
+        <p class="beatmap-stats">{{ starRating }}★ {{ bpm }}bpm / CS{{ size }} / OD{{ overall }} / AR{{ approach }}</p>
         <div class="teams-container">
             <div class="team team-one">
                 <div v-for="score in teamOne">
-                    <h1>{{ players[score.user_id].username }} <span>{{ formatScore(score.score) }}</span></h1>
+                    <h1><a :href="`https://osu.ppy.sh/u/${score.user_id}`">{{ players[score.user_id].username }}</a> <span>{{ formatScore(score.score) }}</span></h1>
                     <p>{{ score.maxcombo }}x max combo - {{ calculateAccuracy(score) }}%</p>
                     <p>{ {{ score.count300 }} / {{ score.count100 }} / {{ score.count50 }} / {{ score.countmiss }} }</p>
                 </div>
             </div>
             <div class="team team-two">
                 <div v-for="score in teamTwo">
-                    <h1>{{ players[score.user_id].username }} <span>{{ formatScore(score.score) }}</span></h1>
+                    <h1><a :href="`https://osu.ppy.sh/u/${score.user_id}`">{{ players[score.user_id].username }}</a> <span>{{ formatScore(score.score) }}</span></h1>
                     <p>{{ score.maxcombo }}x max combo - {{ calculateAccuracy(score) }}%</p>
                     <p>{ {{ score.count300 }} / {{ score.count100 }} / {{ score.count50 }} / {{ score.countmiss }} }</p>
                 </div>
@@ -98,14 +178,22 @@ export default {
     filter: brightness(0.33);
 }
 
-a.beatmap {
+a {
     text-decoration: none;
+}
+
+a.beatmap {
     color: var(--ctp-mocha-text);
     font-size: 16px;
 
     position: relative;
     top: -32px;
     left: 12px;
+}
+
+p.beatmap-stats {
+    color: var(--ctp-mocha-subtext0);
+    text-align: center;
 }
 
 .teams-container {
@@ -115,10 +203,12 @@ a.beatmap {
     padding: 16px;
 }
 
+.team-one a,
 .team-one h1 {
     color: var(--ctp-mocha-blue);
 }
 
+.team-two a,
 .team-two h1 {
     color: var(--ctp-mocha-red);
 }

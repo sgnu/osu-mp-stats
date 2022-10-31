@@ -140,6 +140,12 @@ export default {
 
     async getBeatmap(beatmapId, mods) {
       const params = { 'b': beatmapId }
+      if (mods & 16) {  // hard rock is enforced
+        params.mods = 16
+      } else if (mods & 64) { // double time is enforced
+        params.mods = 64
+      }
+
       const res = await apiCall('get_beatmaps', params)
       res[0]["mods"] = mods
 
