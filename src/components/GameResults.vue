@@ -15,10 +15,10 @@ export default {
     },
     created() {
         this.gameInfo.scores.forEach(score => {
-            if (score.team === '1') {
-                this.teamOne.push(score)
-            } else {
+            if (score.team === '1') {   // team 1 is red, team 2 is blue
                 this.teamTwo.push(score)
+            } else {
+                this.teamOne.push(score)
             }
         })
 

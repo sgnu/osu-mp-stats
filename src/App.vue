@@ -107,10 +107,10 @@ export default {
 
     sortTeams() {
       Object.values(this.players).forEach(player => {
-        if (player.team === '1') {
-          this.teamOne.push(player)
-        } else {
+        if (player.team === '1') {  // team 1 is red, team 2 is blue
           this.teamTwo.push(player)
+        } else {
+          this.teamOne.push(player)
         }
       })
 
