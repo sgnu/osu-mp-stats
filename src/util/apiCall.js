@@ -1,4 +1,4 @@
-import { apiKey } from '../secret'
+const apiKey = import.meta.env.VITE_KEY;
 
 async function apiCall(endpoint, parameters) {
     parameters.k = apiKey
